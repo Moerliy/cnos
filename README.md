@@ -79,12 +79,16 @@ For [BOP challenge 2024](https://bop.felk.cvut.cz/challenges/bop-challenge-2024/
 ```
 pip install -U "huggingface_hub[cli]"
 export DATASET_NAME=hope
-python -m src.scripts.download_bop24 dataset_name=$DATASET_NAME
+python -m src.scripts.download_bop_h3 dataset_name=$DATASET_NAME
+
+# For model-free tasks
+python -m src.scripts.download_modelfree_onboarding_bop_h3
 ```
+
 
 For [BOP challenge 2023](https://bop.felk.cvut.cz/challenges/bop-challenge-2023/) core datasets (LMO, TLESS, TUDL, ICBIN, ITODD, HB, and TLESS), download all datasets with the following command:
 ```
-python -m src.scripts.download_bop23
+python -m src.scripts.download_bop_classic
 ```
 
 #### 2.2. Rendering templates with [Pyrender](https://github.com/mmatl/pyrender):
@@ -185,10 +189,6 @@ python run_inference.py dataset_name=$DATASET_NAME model.onboarding_config.rende
 
 # with SAM + PBR
 python run_inference.py dataset_name=$DATASET_NAME
-
-# using smaller models for FastSAM and DINOv2
-python run_inference.py dataset_name=$DATASET_NAME model=cnos_fast model.descriptor_model.model_name=dinov2_vits14 model.segmentor_model.checkpoint_path=
-
 ```
 After running this script, CNOS will output a prediction file at [this dir](https://github.com/nv-nguyen/cnos/blob/main/configs/run_inference.yaml#L9). You can then evaluate this prediction on [BOP challenge website](https://bop.felk.cvut.cz/).
 
@@ -206,7 +206,6 @@ python -m src.scripts.visualize dataset_name=$DATASET_NAME input_file=$INPUT_FIL
 ```
 python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 python -m src.scripts.visualize_detectron2 dataset_name=$DATASET_NAME input_file=$INPUT_FILE output_dir=$OUTPUT_DIR
-
 ```
 
 </details>

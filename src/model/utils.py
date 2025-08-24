@@ -202,7 +202,7 @@ class Detections:
         return Detections(self.__dict__.copy())
 
 
-def convert_npz_to_json(idx, list_npz_paths):
+def convert_npz_to_json(idx, list_npz_paths, save_segmentation_results=False):
     npz_path = list_npz_paths[idx]
     detections = np.load(npz_path)
     results = []
@@ -216,10 +216,11 @@ def convert_npz_to_json(idx, list_npz_paths):
             "score": float(detections["score"][idx_det]),
             "time": float(detections["time"]),
         }
-        if "segmentation" in detections.keys():
-            result["segmentation"] = mask_to_rle(
-                force_binary_mask(detections["segmentation"][idx_det])
-            )
+        if save_segmentation_results:
+            if "segmentation" in detections.keys():
+                result["segmentation"] = mask_to_rle(
+                    force_binary_mask(detections["segmentation"][idx_det])
+                )
         results.append(result)
 
         if "score_distribution" in detections.keys():

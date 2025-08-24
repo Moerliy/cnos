@@ -31,6 +31,7 @@ def run_inference(cfg: DictConfig):
     query_dataloader_config = default_query_dataloader_config.copy()
     ref_dataloader_config = default_ref_dataloader_config.copy()
 
+    query_dataloader_config.dataset_name = cfg.dataset_name
     if cfg.dataset_name in ["hb", "tless"]:
         query_dataloader_config.split = "test_primesense"
     else:

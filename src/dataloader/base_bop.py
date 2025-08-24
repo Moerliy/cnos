@@ -23,6 +23,7 @@ class BaseBOP(Dataset):
         self,
         root_dir,
         split,
+        dataset_name=None,
         **kwargs,
     ):
         """
@@ -90,45 +91,26 @@ class BaseBOP(Dataset):
             if reset_metaData:
                 for scene_path in tqdm(self.list_scenes, desc="Loading metaData"):
                     scene_id = scene_path.split("/")[-1]
-                    if osp.exists(osp.join(scene_path, "rgb")):
-                        rgb_paths = sorted(Path(scene_path).glob("rgb/*.[pj][pn][g]"))
-                        depth_paths = sorted(
-                            Path(scene_path).glob("depth/*.[pj][pn][g]")
-                        )
-                    else:
-                        rgb_paths = sorted(Path(scene_path).glob("gray/*.tif"))
-                        depth_paths = sorted(Path(scene_path).glob("depth/*.tif"))
-                    # assert len(rgb_paths) == len(depth_paths), f"{scene_path} rgb and depth mismatch"
-
-                    depth_paths = [str(x) for x in depth_paths]
-                    video_metaData = {}
-
-                    # load poses
-                    for json_name in ["scene_camera"]:
-                        json_path = osp.join(scene_path, json_name + ".json")
-                        if osp.exists(json_path):
-                            video_metaData[json_name] = load_json(json_path)
+                    # HOT3D test split contains different modalities and sensors depending on the scene.
+                    if self.dataset_name in ["hot3d"]:
+                        eval_modality = self.dp_split["eval_modality"](int(scene_id))
+                        eval_sensor = self.dp_split["eval_sensor"](int(scene_id))
+                        
+                    for im_id in self.target_images_per_scene[int(scene_id)]:
+                        if self.dataset_name in ["hot3d"]:
+                            rgb_path = self.dp_split[
+                                f"{eval_modality}_{eval_sensor}_tpath"
+                            ].format(scene_id=int(scene_id), im_id=im_id)
                         else:
-                            video_metaData[json_name] = None
-                    assert len(rgb_paths) > 0, f"{scene_path} is empty"
-                    for idx_frame in range(len(rgb_paths)):
-                        # get rgb path
-                        rgb_path = rgb_paths[idx_frame]
-                        # get id frame
-                        id_frame = int(str(rgb_path).split("/")[-1].split(".")[0])
-                        depth_path = osp.join(
-                            scene_path, "depth", f"{id_frame:06d}.png"
-                        )
-                        if depth_path in depth_paths:
-                            metaData["depth_path"].append(depth_path)
-                        else:
-                            metaData["depth_path"].append(None)
+                            rgb_path = self.dp_split["rgb_tpath"].format(
+                                scene_id=int(scene_id), im_id=im_id
+                            )
                         metaData["scene_id"].append(scene_id)
-                        metaData["frame_id"].append(id_frame)
-                        metaData["rgb_path"].append(str(rgb_path))
-                        metaData["intrinsic"].append(
-                            video_metaData["scene_camera"][f"{id_frame}"]["cam_K"]
-                        )
+                        metaData["frame_id"].append(im_id)
+                        metaData["rgb_path"].append(rgb_path)
+                        metaData["depth_path"].append(None)
+                        metaData["intrinsic"].append(None)
+                        
                 # casting format of metaData
                 metaData = casting_format_to_save_json(metaData)
                 save_json(metaData_path, metaData)

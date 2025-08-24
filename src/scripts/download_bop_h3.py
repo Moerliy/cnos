@@ -12,7 +12,7 @@ def run_download(config: DictConfig) -> None:
     local_dir = os.path.join(config.data.root_dir, config.dataset_name)
     logging.info(f"Saving dataset to {local_dir}")
 
-    download_cmd = f"huggingface-cli download bop-benchmark/datasets --include {config.dataset_name}/* --exclude *train_pbr* --local-dir {config.data.root_dir} --repo-type=dataset"
+    download_cmd = f"huggingface-cli download bop-benchmark/{config.dataset_name} --exclude *train_pbr* --local-dir {config.data.root_dir}/{config.dataset_name} --repo-type=dataset"
     logging.info(f"Running {download_cmd}")
     os.system(download_cmd)
     logging.info(f"Dataset downloaded to {local_dir}")
