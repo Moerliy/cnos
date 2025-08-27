@@ -202,7 +202,7 @@ class Detections:
         return Detections(self.__dict__.copy())
 
 
-def convert_npz_to_json(idx, list_npz_paths, save_segmentation_results=False):
+def convert_npz_to_json(idx, list_npz_paths, save_segmentation_results=True):
     npz_path = list_npz_paths[idx]
     detections = np.load(npz_path)
     results = []
