@@ -7,7 +7,7 @@ channels:
   - defaults
 dependencies:
   - pip
-  - python=3.9.6
+  - python=3.10.18
   - pip:
     - numpy==1.26.4
     - torch
@@ -28,6 +28,7 @@ dependencies:
     - hydra-core
     - gdown
     - pytorch-lightning==1.8.6
+    - scikit-image==0.22.0
     - pandas
     - ruamel.yaml
     - pyrender
