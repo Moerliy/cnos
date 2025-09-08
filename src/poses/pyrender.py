@@ -95,6 +95,12 @@ if __name__ == "__main__":
 
     # load mesh to meter
     mesh = trimesh.load_mesh(args.cad_path)
+    center = mesh.bounding_box.centroid
+    mesh.apply_translation(-center)
+   # mesh = trimesh.load(args.cad_path)
+   # print(type(mesh))
+   # print(mesh.vertices.shape if hasattr(mesh, "vertices") else "no vertices")
+   # print(mesh.faces.shape if hasattr(mesh, "faces") else "no faces")
 
     # re-center objects at the origin
     re_center_transform = np.eye(4)

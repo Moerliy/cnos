@@ -3,7 +3,12 @@ import trimesh
 
 
 def load_mesh(path, ORIGIN_GEOMETRY="BOUNDS"):
-    mesh = as_mesh(trimesh.load(path))
+    # If it's already a Trimesh, don't reload
+    if isinstance(path, trimesh.Trimesh):
+        mesh = path
+    else:
+        mesh = as_mesh(trimesh.load(path, file_type="ply", process=False))
+
     if ORIGIN_GEOMETRY == "BOUNDS":
         AABB = mesh.bounds
         center = np.mean(AABB, axis=0)

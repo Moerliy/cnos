@@ -28,6 +28,14 @@ import distinctipy
 from skimage.feature import canny
 from skimage.morphology import binary_dilation
 from segment_anything.utils.amg import rle_to_mask
+rgb_transform = T.Compose(
+        [
+            T.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225],
+            ),
+        ]
+    )
 inv_rgb_transform = T.Compose(
         [
             T.Normalize(
@@ -118,7 +126,7 @@ def run_inference(template_dir, rgb_path, num_max_dets, conf_threshold, stabilit
     templates = proposal_processor(images=templates, boxes=boxes).cuda()
     save_image(templates, f"{template_dir}/cnos_results/templates.png", nrow=7)
     ref_feats = model.descriptor_model.compute_features(
-                    templates, token_name="x_norm_clstoken"
+                    rgb_transform(templates), token_name="x_norm_clstoken"
                 )
     logging.info(f"Ref feats: {ref_feats.shape}")
     
@@ -147,9 +155,10 @@ def run_inference(template_dir, rgb_path, num_max_dets, conf_threshold, stabilit
     detections.to_numpy()
     save_path = f"{template_dir}/cnos_results/detection"
     detections.save_to_file(0, 0, 0, save_path, "custom", return_results=False)
-    detections = convert_npz_to_json(idx=0, list_npz_paths=[save_path+".npz"])
+    #detections = convert_npz_to_json(idx=0, list_npz_paths=[save_path+".npz"])
+    detections, det_info = convert_npz_to_json(idx=0, list_npz_paths=[save_path+".npz"])
     save_json_bop23(save_path+".json", detections)
-    vis_img = visualize(rgb, detections)
+    vis_img = visualize(rgb, detections, save_path+".png")
     vis_img.save(f"{template_dir}/cnos_results/vis.png")
     
 if __name__ == "__main__":
