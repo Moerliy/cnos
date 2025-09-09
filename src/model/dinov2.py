@@ -53,19 +53,33 @@ class CustomDINOv2(pl.LightningModule):
             f"Init CustomDINOv2 with full size={descriptor_width_size} and proposal size={self.proposal_size} done!"
         )
 
-    def process_rgb_proposals(self, image_np, masks, boxes):
+    def process_rgb_proposals(self, image_np, masks, boxes, batch_size=3):
         """
-        1. Normalize image with DINOv2 transfom
-        2. Mask and crop each proposals
-        3. Resize each proposals to predefined longest image size
+        Memory-efficient processing of RGB proposals:
+        1. Normalize image
+        2. Mask and crop each proposal in small batches
+        3. Resize proposals to target size
         """
         num_proposals = len(masks)
-        rgb = self.rgb_normalize(image_np).to(masks.device).float()
-        rgbs = rgb.unsqueeze(0).repeat(num_proposals, 1, 1, 1)
-        masked_rgbs = rgbs * masks.unsqueeze(1)
-        processed_masked_rgbs = self.rgb_proposal_processor(
-            masked_rgbs, boxes
-        )  # [N, 3, target_size, target_size]
+        device = masks.device
+        rgb = self.rgb_normalize(image_np).to(device).float()
+
+        processed_list = []
+
+        for start_idx in range(0, num_proposals, batch_size):
+            end_idx = min(start_idx + batch_size, num_proposals)
+            batch_masks = masks[start_idx:end_idx]
+            batch_boxes = boxes[start_idx:end_idx]
+
+            # Expand rgb instead of repeat (no extra memory)
+            batch_rgbs = rgb.unsqueeze(0).expand(len(batch_masks), -1, -1, -1).clone()
+
+            batch_masked_rgbs = batch_rgbs * batch_masks.unsqueeze(1)
+
+            processed_batch = self.rgb_proposal_processor(batch_masked_rgbs, batch_boxes)
+            processed_list.append(processed_batch)
+
+        processed_masked_rgbs = torch.cat(processed_list, dim=0)
         return processed_masked_rgbs
 
     @torch.no_grad()
